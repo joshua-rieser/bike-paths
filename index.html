@@ -1,366 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bike Paths</title>
-    <style>
-        #map {
-            height: 100%;
-            width: 100%;
-            position: absolute;
-        }
-        /* #searchButton {
-            margin-left: 137px;
-            border: 0px;
-            height: 45px;
-            width: 45px;
+<!doctype html>
+<!--
+ @license
+ Copyright 2019 Google LLC. All Rights Reserved.
+ SPDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Add Map</title>
 
-        } */
-    </style>
-</head>
-<body>
+    <link rel="stylesheet" type="text/css" href="./index.css" />
+    <script type="module" src="./index.js"></script>
 
-    <div id="map"></div>
+    <script>
 
-<script>
-        const app = async () => {
-        const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-        const { PinElement } = await google.maps.importLibrary("marker");
-        };
-        var bluedot_maker = null;
-
-        // Fetch the JSON file
-
-        function getJSONData(){
-        fetch('http://localhost/week12/my-places.php')
-            .then(response => response.json())  // Parse JSON from the response
-            .then(data => {
-                // Iterate over the JSON array
-                console.log(data);
-             return data;
-                data.forEach(market => {
-
-               
-                    // Create a new list item for each market
-                  //  const li = document.createElement('li');
-                   // li.textContent = `Name: ${market.name}, Location: ${market.location}`;
-                   // document.getElementById('marketList').appendChild(li);
-                });
-            })
-            .catch(error => {
-                console.error('Error loading the JSON file:', error);
-            });
-        }
-</script>
-    
-<script>
-      // Initialize and add the map
-        var map;
-        var markers = []; // Array to store markers
-        let infoWindow;
-        let markerClicked = false;
-        let bikePath;
-        async function initMap() {
-        
-
-            // The location of the start, George Brown School of Design
-            var cityCenter = { lat: 43.644506, lng: -79.368676 };
-
-            // Create the map
-            map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 18,
-                center: cityCenter,
-                mapId: 'a54f36eecf9b0e2c',
-                mapTypeControl: false,
-                mapTypeControlOptions: {
-                style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-                position: google.maps.ControlPosition.TOP_CENTER,
-                },
-                zoomControl: false,
-                zoomControlOptions: {
-                position: google.maps.ControlPosition.LEFT_CENTER,
-                },
-                scaleControl: false,
-                streetViewControl: false,
-                streetViewControlOptions: {
-                position: google.maps.ControlPosition.LEFT_TOP,
-                },
-                fullscreenControl: false,
-            });
-            infoWindow = new google.maps.InfoWindow();
-
-            // BIKE PATHS LOGO
-            const locationButton = document.createElement("locationButton");
-
-            locationButton.classList.add("button");
-            // locationButton.style.backgroundColor = "#fff";
-            // locationButton.style.border = "2px solid #fff";
-            // locationButton.style.borderRadius = "3px";
-            // locationButton.style.boxShadow = "0 2px 6px rgba(0,0,0,.3)";
-            // locationButton.style.color = "rgb(25,25,25)";
-            locationButton.style.cursor = "pointer";
-            locationButton.style.fontFamily = "Roboto,Arial,sans-serif";
-            locationButton.style.fontSize = "12px";
-            locationButton.style.lineHeight = "50px";
-            // locationButton.style.margin = "4px 0 22px";
-            // locationButton.style.padding = "0px 0px";
-            locationButton.style.marginTop = "15px";
-            locationButton.style.textAlign = "center";
-            locationButton.style.backgroundImage = "url('http://localhost/week12/images/bikePaths.png')";
-            locationButton.style.backgroundRepeat = "no-repeat";
-            locationButton.style.backgroundSize = "225px";
-            locationButton.style.backgroundPositionX = "center";
-            locationButton.textContent = "‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ";
-            locationButton.type = "button";
-            map.controls[google.maps.ControlPosition.TOP_CENTER].push(locationButton);
-            locationButton.addEventListener("click", () => {
-            // Try HTML5 geolocation.
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const pos = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                    };
-
-                    infoWindow.setPosition(pos);
-                    infoWindow.setContent("Location found.");
-                    infoWindow.open(map);
-                    map.setCenter(pos);
-                    map.setZoom(18);
-                },
-                () => {
-                    handleLocationError(true, infoWindow, map.getCenter());
-                },
-                );
-            } else {
-                // Browser doesn't support Geolocation
-                handleLocationError(false, infoWindow, map.getCenter());
-            }
-
-            });
-
-
-            function handleLocationError(browserHasGeolocation, infoWindow, pos) {
-                infoWindow.setPosition(pos);
-                infoWindow.setContent(
-                    browserHasGeolocation
-                    ? "Error: The Geolocation service failed."
-                    : "Error: Your browser doesn't support geolocation.",
-                );
-                infoWindow.open(map);
-                }
-
-            // SEARCH BUTTON
-            const searchButton = document.createElement("searchButton");
-            searchButton.classList.add("searchButton");
-            // searchButton.style.backgroundColor = "#fff";
-            // searchButton.style.border = "2px solid #fff";
-            // searchButton.style.borderRadius = "3px";
-            // searchButton.style.boxShadow = "0 2px 6px rgba(0,0,0,.3)";
-            // searchButton.style.color = "rgb(25,25,25)";
-            searchButton.style.cursor = "pointer";
-            searchButton.style.fontFamily = "Roboto,Arial,sans-serif";
-            searchButton.style.fontSize = "12px";
-            searchButton.style.lineHeight = "85px";
-            // searchButton.style.margin = "4px 0 22px";
-            // searchButton.style.padding = "0px 0px";
-            searchButton.style.marginBottom = "25px";
-            searchButton.style.textAlign = "center";
-            searchButton.style.backgroundImage = "url('http://localhost/week12/images/search.png')";
-            searchButton.style.backgroundRepeat = "no-repeat";
-            searchButton.style.backgroundSize = "85px";
-            searchButton.style.backgroundPositionX = "center";
-            searchButton.textContent = "‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ";
-            searchButton.type = "searchButton";
-            map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(searchButton);
-            // Button to search for nearby markers on the map after it's loaded
-            searchButton.addEventListener("click", () => {
-                // New market location (this could be dynamically set based on other events or data)
-                markets.forEach(function(market) {
-                addMarketMarker(market);
-                map.setCenter(cityCenter);
-                map.setZoom(15);
-                bikePath.setMap(null);
-                
-                         });
-                        //  bikePathCoordinates.forEach(function(bikePathCoordinates) {
-                        //     removeBikePath(bikePathCoordinates);
-                        //     map.setCenter(cityCenter);
-                        //  });
-                 
-            });
-
-
-
-
-
-
-
-            var markets = []
-            fetch('http://localhost/week12/my-places.php')
-            .then(response => response.json())  // Parse JSON from the response
-            .then(data => {
-                // Iterate over the JSON array
-                console.log(data);
-           
-                data.forEach(item => {
-
-                    markets.push({
-                        lat: Number(item.lat), lng: Number(item.lng), name: item.place
-                    })
-                    console.log(markets)
-                    // Create a new list item for each market
-                  //  const li = document.createElement('li');
-                   // li.textContent = `Name: ${market.name}, Location: ${market.location}`;
-                   // document.getElementById('marketList').appendChild(li);
-                });
-
-              
-
-
-            })
-            .catch(error => {
-                console.error('Error loading the JSON file:', error);
-            });
-
-        //    var markets = [
-        //        { lat: 40.740610, lng: -73.925242, name: "Farmers Market 1" },
-        //        { lat: 40.750610, lng: -73.915242, name: "Farmers Market 2" },
-        //         // Add more markets as needed
-        //     ];
-
-       
-                    // addSingleMarketMarker() 
-  
-            // // Button to add a new marker on the map after it's loaded
-            // document.getElementById('button').addEventListener('click', function() {
-            //     // New market location (this could be dynamically set based on other events or data)
-            //     markets.forEach(function(market) {
-            //     addMarketMarker(market);
-            //              });
-            //              bikePathCoordinates.forEach(function(bikePathCoordinatesLatLng) {
-            //                 addBikePath(bikePathCoordinates);
-            //              });
-                 
-            // });
-//             const bikePathCoordinates = [
-//     { lat: 43.644606, lng: -79.368676 },
-//     { lat: 43.644457, lng: -79.369207 },
-//     { lat: 43.643873, lng: -79.368814 }
-//   ];
-
-monitor_position(map);
-
-        }
-
-        const monitor_position = async (map) => {
-				const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-				var geolocation_options = {
-					enableHighAccuracy: true,
-					timeout: 10000,
-					maximumAge: 0,
-				};
-				navigator.geolocation.watchPosition(
-					(position) => {
-						var coordinates = position.coords;
-						current_lat = coordinates.latitude;
-						current_lng = coordinates.longitude;
-						console.log(coordinates);
-						if (bluedot_maker == null) {
-							const blueDotImg = document.createElement("img");
-							blueDotImg.width = 60;
-							blueDotImg.height = 60;
-							blueDotImg.src = "images/location.png";
-							bluedot_maker = new AdvancedMarkerElement({
-								map: map,
-								content: blueDotImg,
-								position: {
-									lat: current_lat,
-									lng: current_lng,
-								},
-							});
-						} else {
-							bluedot_maker.position = {
-								lat: current_lat,
-								lng: current_lng,
-							};
-						}
-					},
-					(err) => {
-						console.error(err);
-					},
-					geolocation_options
-				);
-			};
-
-
-
-  function BikePath(bikePathCoordinates) {
-  bikePath = new google.maps.Polyline({
-    path: bikePathCoordinates,
-    geodesic: true,
-    strokeColor: "#3572EA",
-    strokeOpacity: 1.0,
-    strokeWeight: 15,
-  });            
-  bikePath.setMap(map);
-  map.setZoom(18);
-}
-
-window.initMap = initMap;
-
-        function addMarketMarker(market) {
-
-            const bikePathCoordinates = [
-    { lat: 43.644606, lng: -79.368676 },
-    { lat: 43.644457, lng: -79.369207 },
-    { lat: 43.643873, lng: -79.368814 }
-  ];
-
-            // Create a pin element.
-            let iconImg = document.createElement("img");
-//   iconImg.src = "images/search.png";
-//   iconImg.style = "width:1em";
-  let pin = new google.maps.marker.PinElement({
-    scale: 1.25,
-    background: "#f72f2f",
-    glyphColor: "white",
-  });
-            var marker = new google.maps.marker.AdvancedMarkerElement({
+function addMarketMarker(market) {
+            var marker = new google.maps.Marker({
                 position: { lat: market.lat, lng: market.lng },
                 map: map,
-                title: market.name,
-                content: pin.element,
-            });
-
-            // Add an info window to the marker
-            var infowindow = new google.maps.InfoWindow({
-                content: market.name
-            });
-
-            marker.addListener('click', function() {
-                    infowindow.open(map, marker);
-                    BikePath(bikePathCoordinates);
-                });
-
-
- 
-
-            // Optionally, store the marker in an array to keep track of all markers
-            markers.push(marker);
-        }
-
-        
-        // Function to add a new market marker to the map
-        function addSingleMarketMarker() {
-
-            var newMarket = { lat: 40.740610, lng: -73.925242, name: "New Farmers Market" };
-            var marker = new google.maps.marker.AdvancedMarkerElement({
-                position: { lat: newMarket.lat, lng: newMarket.lng },
-                map: map,
-                title: newMarket.name
+                title: market.name
             });
 
             // Add an info window to the marker
@@ -375,16 +32,31 @@ window.initMap = initMap;
             // Optionally, store the marker in an array to keep track of all markers
             markers.push(marker);
         }
+
+
+
+        function clickButton(){
+            var newMarket = { lat: 40.740610, lng: -73.925242, name: "New Farmers Market" };
+            addMarketMarker(newMarket);
+
+
+        }
     </script>
+  </head>
+  <body>
+    <h3>My Google Maps Demo</h3>
 
-    <!-- Include Google Maps JavaScript API -->
-    <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmDR_c16kPcZAOx4HelgbyUC-VBABQPnM&callback=initMap&libraries=marker"
-        async
-        defer
-    ></script>
-<!-- 
-    <div id="searchButton" style="margin-bottom: -15px;"><button id="button" style="background-color: white; border: 0px;"><img src="images/search.png" alt="Search" height="75px" width="75px"></button></div> -->
 
-</body>
+    <button id="addMarkerButton">Add Marker</button>
+
+
+
+
+    <!--The div element for the map -->
+    <div id="map"></div>
+
+    <!-- prettier-ignore -->
+    <script>(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+        ({key: "AIzaSyBmDR_c16kPcZAOx4HelgbyUC-VBABQPnM", v: "weekly"});</script>
+  </body>
 </html>
